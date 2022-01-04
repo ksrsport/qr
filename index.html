@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- meta -->
+<meta charset="utf-8">
+<title>QRコード生成</title>
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<!-- jQuery -->
+<script type="text/javascript" src="js/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="js/jquery.qrcode.min.js"></script>
+<script  type="text/javascript" src="js/encoding.min.js"></script>
+<style type="text/css">
+#wrapper{
+    text-align: center;
+    padding: 3em 0 0;
+}
+#wrapper h1{
+    margin-bottom: 1em;
+}
+input[type=qr-input]{
+    width: 300px;
+    font-size: 14px;
+    line-height: 30px;
+    padding: 4px 8px;
+}
+.btn{
+    vertical-align: middle;
+}
+
+#plus{
+    margin-top: 1em;
+}
+#result{
+    background-color: #e5eeff;
+    padding: 1em;
+    margin-top: 3em;
+}
+#qr{
+    display: flex;
+    justify-content: space-between;
+    justify-content: flex-start;
+}
+#qr li{
+    list-style: none;
+    width: 140px;
+    position: relative;
+}
+#qr li p{
+    word-wrap: break-word;
+    font-size: 10px;
+}
+#qr li span{
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 20px;
+    line-height: 20px;
+    background-color: #000;
+    color: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+<div id="wrapper">
+    <h2>釧路市スポーツ施設受付QRコード生成</h2>
+    <div id="input">
+        <p>名前<br/><input name="qr-name" type="qr-input" class="code0" placeholder="（例）山田　太郎" /></p>
+        <p>電話番号<br/><input name="qr-tel" type="qr-input" class="code0" placeholder="（例）000-111-2222" /></p>
+        <p>メールアドレス<br/><input name="qr-mail" type="qr-input" class="code0" placeholder="（例）mail@mail.address.jp" /></p>
+        <p id="plus" class="btn btn-danger">+ QRコードを生成する</p>
+    </div>
+
+    <p id="reset" class="btn btn-primary">リセット</p>
+
+    <div id="result">
+        <ul id="qr">
+        </ul>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+$(document).ready(function(){
+    var saveStorage = function(key,val){
+        localStorage.setItem(key, JSON.stringify(val));
+    };
+
+    var getStorage = function(key){
+        var obj = localStorage.getItem(key);
+        return JSON.parse(obj);
+    };
+
+    var add = function(){
+        var text_name = $('input[name="qr-name"]').val();
+        var text_tel = $('input[name="qr-tel"]').val();
+        var text_mail = $('input[name="qr-mail"]').val();
+
+
+       var text = [text_name, text_tel, text_mail].join(',');
+
+
+	var text = text_name + "," + text_tel + "," + text_mail;
+        jQuery('#qr').qrcode({width: 120, height: 120, text: Encoding.convert(text, 'sjis')});
+
+        var url = document.getElementsByTagName("canvas");
+        var canvas = url[0].toDataURL("image/png");
+
+        addData(canvas,text);
+        saveData(canvas,text);
+    };
+
+    var addData = function(canvas,text){
+        var list = '<li><p>' + text + '</p><div><img src="' + canvas + '" /></div><li>';
+        $("#qr").prepend(list);
+        $("canvas").remove();
+    }
+
+    dataArr = [];
+    var storageKey = 'dataObj';
+
+    var saveData = function(canvas,text){
+        var dataObj = {
+            canvas : canvas,
+            text : text
+        };
+        dataArr.push(dataObj);
+        saveStorage(storageKey,dataArr);
+    }
+
+    var resetData = function(){
+        $("#qr").children().remove();
+        window.localStorage.clear();
+    }
+
+    var readData = function(){
+        var dataObjs = getStorage(storageKey);
+        if(dataObjs == null) return;
+        for (var i = 0; i < Object.keys(dataObjs).length; i ++) {
+            var dataObj = dataObjs[i];
+            var canvas = dataObj.canvas;
+            var text = dataObj.text;
+            var dataObj = {
+                canvas : canvas,
+                text : text
+            };
+        dataArr.push(dataObj);
+        saveStorage(storageKey,dataArr);
+            addData(canvas,text);
+        }
+    };
+
+    //ページ読込み時にメモ復帰
+    readData();
+
+    //フォームにURLが入力されたらQRコードを生成する
+    $("#plus").on("click", function(){
+        var text_name = $('input[name="qr-name"]').val();
+        var text_tel = $('input[name="qr-tel"]').val();
+        var text_mail = $('input[name="qr-mail"]').val();
+/*
+        if($("input").val() !== ""){
+            add();
+        }
+*/
+        if(text_name !== "" && text_tel !== "" && text_mail !== ""){
+            add();
+        }
+	
+    });
+
+    //リセット
+    $("#reset").on('click',function(){
+        resetData();
+    });
+
+});
+
+</script>
+
+</body></html>
